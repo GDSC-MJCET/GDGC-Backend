@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "type": "module",
   "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -18,6 +21,9 @@
   },
   "homepage": "https://github.com/GDSC-MJCET/GDGC-Backend#readme",
   "dependencies": {
-    "express": "^5.1.0"
+    "@prisma/client": "^6.15.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "prisma": "^6.15.0"
   }
 }

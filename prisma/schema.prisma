@@ -1,0 +1,55 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Application {
+  id            String   @id @default(cuid())
+  
+  // Personal Information
+  name     String
+  rollNo   String
+  phoneNo  String
+  branch   String
+  year     String
+  resume   String
+  email    String
+  // Professional Links
+  linkedin     String
+  github       String
+  previousWork String
+  
+  // Portfolio Preferences
+  selectedPortfolios String[] // Array of selected portfolios
+  portfolio1         String?
+  portfolio2         String?
+  
+  // Submission Information
+  submittedAt DateTime @default(now())
+  status      Status   @default(PENDING)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("applications")
+}
+
+enum Status {
+  PENDING
+  APPROVED
+  REJECTED
+  UNDER_REVIEW
+  
+  @@map("application_status")
+}
