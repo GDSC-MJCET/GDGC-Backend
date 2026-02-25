@@ -10,3 +10,4 @@ Technologies :
 - Javascript
 - ExpressJS
 - MongoDB 
+- Brevo for email service 
