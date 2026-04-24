@@ -4,7 +4,6 @@ import { fileURLToPath } from 'url'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 import dyeRoutes from "./routes/dyeRoutes.js";
-
 // Load .env from root directory
 dotenv.config({ path: path.join(__dirname, '../.env') });
 import express from "express"
@@ -18,6 +17,7 @@ app.use(cors());
 
 connectDB();
 
+import {formRouter} from "./routes/form.js"
 import { techDebateRouter } from './routes/techDebate.js'
 import { qrRouter } from './routes/qr.js'
 import { userRouter } from "./routes/user.js";
@@ -37,6 +37,8 @@ app.use("/api/v1/user",userRouter)
 app.use("/api/v1/auth", authRouter)
 app.use("/api/v1/dashboard",dashboardRouter)
 app.use('/api/v1/techdebate',techDebateRouter)
+app.use('/api/v1/form',formRouter)
+
 
 // QR router should be LAST since it catches all remaining routes
 app.use("/",qrRouter)
