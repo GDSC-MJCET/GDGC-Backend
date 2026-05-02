@@ -310,7 +310,7 @@ export const FriendRequestController = {
                 })
             }
 
-            await Conversation.findOneAndUpdate(
+            const conversation = await Conversation.findOneAndUpdate(
                 {
                     participants: {
                         $all: [
@@ -328,7 +328,10 @@ export const FriendRequestController = {
             // Question to captain, should the user being blocked be notified about him being blocked by the current user?
             const blockFriendSocketId = userSocketMap[blockFriendId];
             if(blockFriendSocketId) {
-                io.to(blockFriendSocketId).emit('Blocked')
+                io.to(blockFriendSocketId).emit('Blocked', {
+                    blocker: userId,
+                    conversationId: conversation._id
+                })
             }
     
             // return result
@@ -363,7 +366,7 @@ export const FriendRequestController = {
          }
  
          // if blocked, turn to accepted
-         await Conversation.findOneAndUpdate(
+         const conversation = await Conversation.findOneAndUpdate(
             {
                 participants: {
                     $all: [userId, unBlockFriendId]
@@ -375,7 +378,10 @@ export const FriendRequestController = {
          // notify the other party
          const unBlockFriendSocketId = userSocketMap[unBlockFriendId];
          if(unBlockFriendSocketId) {
-             io.to(unBlockFriendSocketId).emit('Unblocked');
+             io.to(unBlockFriendSocketId).emit('Unblocked', {
+                unBlocker: userId,
+                conversationId: conversation._id
+             });
          }
  
          // return response
