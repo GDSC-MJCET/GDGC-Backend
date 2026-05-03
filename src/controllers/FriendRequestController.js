@@ -2,7 +2,8 @@ import FriendRequest from '../models/FriendRequest.js';
 import { io, userSocketMap } from '../index.js';
 import Conversation from '../models/Conversation.js';
 import User from '../models/User.js';
-import { messageRouter } from '../routes/message.js';
+import mongoose from 'mongoose';
+//import escapeStringRegexp from 'escape-string-regexp'
 
  const COOL_DOWN_PERIOD = 2 * 24 * 60 *  60 * 1000;
 export const FriendRequestController = {
@@ -10,7 +11,7 @@ export const FriendRequestController = {
     SendFriendRequest: async (req, res) => { 
         const receiver = req.params.receiver;
         const sender = req.id;
-        if(!receiver) {
+        if(!receiver || !mongoose.Types.ObjectId.isValid(receiver)) {
             return res.status(400).json({
                 message: 'Receiver id needed'
             })
@@ -87,7 +88,7 @@ export const FriendRequestController = {
         // Get sender id from params, validate
         const receiver = req.id;
         const sender = req.params.sender;
-        if(!sender) {
+        if(!sender || !mongoose.Types.ObjectId.isValid(sender)) {
             return res.status(400).json({
                 message: 'Senders Id is required'
             })
@@ -137,7 +138,7 @@ export const FriendRequestController = {
         // Get sender id from params, validate
         const receiver = req.id;
         const sender = req.params.sender;
-        if(!sender) {
+        if(!sender || !mongoose.Types.ObjectId.isValid(sender)) {
             return res.status(400).json({
                 message: 'Senders Id is required'
             })
@@ -286,7 +287,7 @@ export const FriendRequestController = {
     BlockFriend: async (req, res) => {
         const userId = req.id;
         const blockFriendId = req.params.unfrinedId;
-        if(!blockFriendId) {
+        if(!blockFriendId || !mongoose.Types.ObjectId.isValid(blockFriendId)) {
             return res.status(400).json({
                 message: 'unfriendId is required'
             });
@@ -349,6 +350,11 @@ export const FriendRequestController = {
         //get the userId and Id of the friend to be unblocked
         const userId = req.id;
         const unBlockFriendId = req.params.unBlockFriendId;
+        if(!unBlockFriendId || !mongoose.Types.ObjectId.isValid(unBlockFriendId)) {
+            return res.status(400).json({
+                message: 'Invalid Unblock friend Id'
+            })
+        }
 
        try {
          // get the existing friend request and check if it is blocked, if it is update
@@ -399,8 +405,10 @@ export const FriendRequestController = {
         // get user id 
         const userId = req.id;
         // get search query name and pagination details page, limit, 
-        const { name, page=1, limit=10 } = req.query;
-        
+        // const { name, page=1, limit=10 } = req.query;
+        const page = Math.max(1, parseInt(req.query.page) || 1);
+        const limit = Math.min(40, parseInt(req.query.limit) || 10)
+        const name = req.query.name;
 
         // construct a query object
         const dbQuery = { _id: {$ne:userId} }

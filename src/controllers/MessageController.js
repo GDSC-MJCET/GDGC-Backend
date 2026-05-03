@@ -1,6 +1,7 @@
 import { io, userSocketMap } from "../index.js";
 import { decrypt, encrypt } from "../helpers/encryption.js";
 import Message from "../models/Message.js";
+import mongoose from "mongoose";
 
 export const MessageController = {
     SendMessage: async (req, res) => {
@@ -13,9 +14,14 @@ export const MessageController = {
         );
 
         // validate them
-        if(!plainMessage || !receicver) {
+        if(!receicver) {
             return res.status(400).json({
-                message: 'No message, reciever sent'
+                message: 'No reciever sent'
+            });
+        }
+        if(!plainMessage || typeof plainMessage !== 'string' || !plainMessage.trim()) {
+            return res.status(400).json({
+                message: 'Invalid message'
             });
         }
 
@@ -59,7 +65,14 @@ export const MessageController = {
 
     GetMessages: async (req, res) => {
         // get query params for pagination
-        const { limit = 10, cursor } = req.query;
+        // const { limit = 10, cursor } = req.query;
+        const limit = Math.min(30, parseInt(req.query.limit) || 10);
+        const cursor = req.query.cursor;
+        if(cursor && !mongoose.Types.ObjectId.isValid(cursor)) {
+            return res.status(400).json({
+                message: 'Invalid cursor'
+            })
+        }
 
         // get conversation
         const conversation = req.conversation;
@@ -100,7 +113,7 @@ export const MessageController = {
         const messageId = req.params.messageId;
         const conversation = req.conversation;
         const userId = req.id;
-        if(!messageId) return res.status(400).json({ message: 'messageId is required' });
+        if(!messageId || !mongoose.Types.ObjectId.isValid(messageId)) return res.status(400).json({ message: 'messageId is required' });
 
         // get the message object by id and unset
         try {
@@ -130,12 +143,14 @@ export const MessageController = {
     EditMessage: async (req, res) => {
         // get message from body
         const editedPlainMessage = req.body.message;
-        if(!editedPlainMessage) return res.status(400).json({
-            message: 'Edited text is required'
-        })
+         if(!editedPlainMessage || typeof editedPlainMessage !== 'string' || !editedPlainMessage.trim()) {
+            return res.status(400).json({
+                message: 'Invalid message'
+            });
+        }
         // get message id form param
         const messageId = req.params.messageId;
-        if(!messageId) return res.status(400).json({
+        if(!messageId || !mongoose.Types.ObjectId.isValid(messageId)) return res.status(400).json({
             message: 'message ID is required'
         })
         // get conversation form req
