@@ -3,7 +3,6 @@ import User from '../models/User.js'
 export const VerifyToken = async (req, res, next) => {
         try {
             let token;
-            console.log("Authorization header is ",req.headers.authorization)
             token = req.headers.authorization.split(" ")[1];
             if (!token) {
                 return res.status(401).json({

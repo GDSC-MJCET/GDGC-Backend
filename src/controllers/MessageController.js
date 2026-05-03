@@ -76,6 +76,8 @@ export const MessageController = {
 
         // get conversation
         const conversation = req.conversation;
+        const userId = req.id;
+        const selectedUser = conversation.participants.find(id => id.toString() !== userId);
 
         try {
             const dbQuery = { conversationId: conversation._id };
@@ -85,7 +87,21 @@ export const MessageController = {
             .limit(Number(limit))
             .sort({ _id: 1 });
 
-            if(messages.length === 0) return res.status(200).json({ message: 'No messages yet' })
+            if(messages.length === 0) return res.status(200).json({ message: 'No messages yet' });
+
+            const unseenMessageIds = messages.filter(
+                (message) => 
+                    message.sender.toString() === selectedUser.toString() && 
+                    !message.seen
+            )
+            .map(messages => messages._id);
+            
+            if(unseenMessageIds.length !== 0) {
+                await Message.updateMany(
+                    { _id: { $in: unseenMessageIds } }, 
+                    { $set: { seen: true } }
+                );
+            }
 
             const sendable = messages.map(
                 (chat) => {
@@ -101,6 +117,16 @@ export const MessageController = {
                     }
                 }
             );
+
+            if(unseenMessageIds.length !== 0) {
+                const selectedUserSocketId = userSocketMap[selectedUser];
+                if(selectedUserSocketId) {
+                    io.to(selectedUserSocketId).emit('MessageSeen', {
+                        conversationId: conversation._id,
+                        unseenMessageIds
+                    })
+                }
+            }
 
             return res.status(200).json(sendable)
         } catch (error) {
