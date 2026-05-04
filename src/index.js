@@ -30,6 +30,9 @@ io.use(SocketAuthMiddleware)
 io.on('connect', (socket) => {
     const userId = socket.data.userId;
     userSocketMap[userId] = socket.id;
+    if(socket.data.superadmin) {
+        socket.join('superadmin');
+    }
 
     io.emit('GetUsers', Object.keys(userSocketMap));
 
