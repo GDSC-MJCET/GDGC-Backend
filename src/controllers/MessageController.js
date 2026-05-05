@@ -85,7 +85,7 @@ export const MessageController = {
 
             const messages = await Message.find(dbQuery).select('-conversationId')
             .limit(Number(limit))
-            .sort({ _id: 1 });
+            .sort({ _id: -1 });
 
             if(messages.length === 0) return res.status(200).json({ message: 'No messages yet' });
 
@@ -128,7 +128,16 @@ export const MessageController = {
                 }
             }
 
-            return res.status(200).json(sendable)
+            return res.status(200).json({
+                messages: sendable,
+                meta: {
+                    nextCursor: sendable.length === limit ? 
+                        sendable[sendable.length - 1]._id : 
+                        null,
+                    hasMore: sendable.length === limit ,
+                    limit,
+                }
+            })
         } catch (error) {
             return res.status(500).json({ message: error.message })
         }
