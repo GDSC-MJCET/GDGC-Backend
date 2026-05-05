@@ -1,3 +1,5 @@
+import { _cidrv6 } from "zod/v4/core";
+import { eventNotifier } from "../helpers/eventNotifier.js";
 import Blog from "../models/Blog.js";
 import Comment from "../models/Comment.js";
 import User from "../models/User.js";
@@ -123,6 +125,8 @@ export const BlogController = {
         }
         const blog =await Blog.findByIdAndUpdate(_id,{ $inc: { 'activity.total_upvotes': 1 }, $addToSet: { 'activity.liked_by': userId } },   
 );
+        const meta = { blogId: _id, blogTitle: blog.title };
+        await eventNotifier('BlogUpVoted', userId, meta);
         return res.json({"message":"upVoted successfully"})
     },
     downVoteBlog: async(req,res)=>{
@@ -131,8 +135,10 @@ export const BlogController = {
          if (!DidntLike) {
             return res.json({"message":"You have not upvoted this blog"})
         }
-        await Blog.findByIdAndUpdate(_id,{ $inc: { 'activity.total_upvotes': -1 } , $pull: { 'activity.liked_by': req.id } }
+        const blog = await Blog.findByIdAndUpdate(_id,{ $inc: { 'activity.total_upvotes': -1 } , $pull: { 'activity.liked_by': req.id } }
 );
+        const meta = { blogId: _id, blogTitle: blog.title };
+        await eventNotifier('BlogDownVoted', req.id, meta)
         return res.json({"message":"downVoted successfully"})
     }
 ,
@@ -147,7 +153,9 @@ export const BlogController = {
         //("Blog to be published is ",toBePublished.title)
         try {
             //("Trying to publish blog")
-            await toBePublished.save()
+            const newBlog = await toBePublished.save()
+            const meta = { blogId: newBlog._id, blogTitle: newBlog.title };
+            await eventNotifier('NewBlogPublished', req.id, meta);
             //("Blog published successfully")
         } catch (error) {
             //("Error in publishing blog ",error.message)
@@ -163,11 +171,14 @@ export const BlogController = {
          const user = await User.findById(req.id)
          if (user.superadmin) {
             await Blog.findByIdAndDelete(_id)
-            
-             return res.json({"message":"Blog deleted by Super Admin successfully"})
+            const meta = { blogId: blog._id, blogTitle: blog.title };
+            await eventNotifier('BlogDeleted', req.id, meta);
+            return res.json({"message":"Blog deleted by Super Admin successfully"})
          }
          if (blog.author.toString() == req.id.toString()) {
              await Blog.findByIdAndDelete(_id)
+             const meta = { blogId: blog._id, blogTitle: blog.title };
+             await eventNotifier('BlogDeleted', req.id, meta);
              return res.json({"message":"Blog deleted successfully"})
          }else{
              return res.json({"message":"unauthorized request"})
@@ -204,6 +215,12 @@ export const BlogController = {
                     createdAt:comment.createdAt,
                     level:comment.level
                 }
+                const meta = {
+                    blogId: _id,
+                    blogTitle: blog.title,
+                    commentId: comment._id
+                };
+                await eventNotifier('NewCommentOnBlog', req.id, meta);
                 return res.json({"message":"Comment added successfully", comment: commentsending })
             } catch (error) {
                 return res.json({"message":"Error in adding comment "+error.message})
@@ -234,10 +251,15 @@ const user = await User.findById(req.id);
   }
   await Comment.deleteMany({ replyTo: comment._id });
   await Comment.findByIdAndDelete(_id);
-  await Blog.findByIdAndUpdate(comment.blogId, {
-    $pull: { 'activity.total_comments': comment._id,'replyTo':comment._id }
+  const blog = await Blog.findByIdAndUpdate(comment.blogId, {
+    $pull: { 'activity.total_comments': comment._id, 'replyTo': comment._id }
   });
-  
+  const meta = {
+    blogId: blog._id,
+    blogTitle: blog.title,
+    commentId: comment._id
+  };
+  await eventNotifier('CommentDeleted', req.id, meta);
   return res.json({ message: "Comment deleted successfully" });
 },
    getComments: async(req,res)=>{

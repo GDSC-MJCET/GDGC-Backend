@@ -7,7 +7,7 @@ const eventNotificationSchema = new mongoose.Schema({
         required: true
     },
     event: {
-        type: string,
+        type: String,
         required: true
     },
     meta: {
