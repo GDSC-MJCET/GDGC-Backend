@@ -1,3 +1,4 @@
+import { eventNotifier } from "../helpers/eventNotifier.js";
 import Doubt from "../models/Doubt.js";
 export const doubtController = {
     postDoubt : async (req,res)=>{
@@ -10,7 +11,8 @@ export const doubtController = {
             const doubt = new Doubt({
                 message,tag
             })
-             await doubt.save()
+            const createdDoubt = await doubt.save()
+            await eventNotifier('NewDoubtPosted', req.id, createdDoubt);
             return res.status(200).json(doubt)
         } catch (error) {
              return res.status(400).json({"error":error.message})

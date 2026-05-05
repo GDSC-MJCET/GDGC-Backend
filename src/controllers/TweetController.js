@@ -1,4 +1,5 @@
 //write a controller that create tweet using a req.id which ccomes form middleware
+import { eventNotifier } from "../helpers/eventNotifier.js";
 import { Tweet } from "../models/Tweet.js";
 const { Types } = Tweet.schema;
 
@@ -8,12 +9,14 @@ export const TweetController = {
         const parentTweetId = req.body?.parentTweetId || null;
         try {
             const newTweet = new Tweet({
-                author: req.user.id,
+                author: req.user.id, // if you are trying to fetch userId from the middleware use req.id not req.user.id, for better understanding refer "src/middleware/AuthMiddleware.js"
                 text: content,
                 media,
                 parentTweet: parentTweetId || null,
             });
             await newTweet.save();
+            const meta = { tweetId: newTweet._id, tweetContent: newTweet.text };
+            await eventNotifier("NewTweet", req.id, meta);
             res.status(201).json(newTweet);
         } catch (error) {
             res.status(400).json({ error: error.message });
@@ -57,10 +60,11 @@ export const TweetController = {
             if (!tweet) {
                 return res.status(404).json({ error: "Tweet not found" });
             }
-            if (tweet.author.toString() !== req.user.id) {
+            if (tweet.author.toString() !== req.user.id) { // if you are trying to fetch userId from the middleware use req.id not req.user.id, for better understanding refer "src/middleware/AuthMiddleware.js"
                 return res.status(403).json({ error: "Unauthorized" });
             }
             await tweet.remove();
+            await eventNotifier('TweetDeleted', user.id, {})
             res.json({ message: "Tweet deleted successfully" });
         } catch (error) {
             res.status(500).json({ error: error.message });
@@ -81,6 +85,12 @@ export const TweetController = {
                 parentTweet: parentTweetId,
             });
             await newTweet.save();
+            const meta = { 
+                newTweetId: newTweet._id, 
+                tweetContent: content,
+                parentTweetId
+            };
+            await eventNotifier('ReplyedToTweet', user.id, meta);
             res.status(201).json(newTweet);
         } catch (error) {
             res.status(400).json({ error: error.message });
