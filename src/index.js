@@ -72,6 +72,7 @@ import {imageRouter} from "./routes/image.js";
 
 import { buildweekRouter } from './routes/buildweek.js'
 import { blogRouter } from "./routes/blog.js";
+import { eventNotificationRouter } from './routes/eventNotification.js'
 import { problemRouter } from "./routes/problems.js";
 import { submissionRouter } from "./routes/submissions.js";
 import { exerciseRouter } from "./routes/exercises.js";
@@ -98,6 +99,7 @@ app.use("/api/exercises", exerciseRouter)
 app.use("/api/leaderboard", leaderboardRouter)
 app.use("/api/users", userStatsRouter)
 app.use("/api/v1/socials", socialsRouter);
+app.use('/api/v1/event-notification', eventNotificationRouter);
 
 // QR router should be LAST since it catches all remaining routes
 app.use("/",qrRouter)
