@@ -4,6 +4,7 @@ import rateLimit from 'express-rate-limit';
 export const defaultLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     limit: 100,
+    keyGenerator: (req) => req.ip,
     standardHeaders: 'draft-8',
     legacyHeaders: false,
     message: {
@@ -18,6 +19,7 @@ export const defaultLimiter = rateLimit({
 export const strictLimiter = rateLimit({    
     windowMs: 1 * 60 * 1000, // 1 minute
     limit: 5,
+    keyGenerator: (req) => req.ip,
     standardHeaders: 'draft-8',
     legacyHeaders: false,
     message: {
@@ -30,6 +32,7 @@ export const strictLimiter = rateLimit({
 export const formLimiter = rateLimit({
     windowMs: 1 * 60 * 1000, // 1 minute
     limit: 5,
+    keyGenerator: (req) => req.ip,
     standardHeaders: 'draft-8',
     legacyHeaders: false,
     message: {

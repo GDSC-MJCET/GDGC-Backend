@@ -2,7 +2,9 @@ import express from "express";
 import {BlogController} from "../controllers/BlogController.js";
 import { VerifyToken } from "../middleware/AuthMiddleware.js";
 import SuperAdminMiddleware from "../middleware/SuperAdminMiddleware.js";
+import { defaultLimiter } from "../middleware/RateLimitter.js";
 export const blogRouter = express.Router()
+blogRouter.use(defaultLimiter);
 
 
 blogRouter.route('/get-blogs').get(BlogController.getBlogs)
