@@ -1,6 +1,7 @@
 import { io, userSocketMap } from "../index.js";
 import { decrypt, encrypt } from "../helpers/encryption.js";
 import Message from "../models/Message.js";
+import mongoose from "mongoose";
 
 export const MessageController = {
     SendMessage: async (req, res) => {
@@ -13,9 +14,14 @@ export const MessageController = {
         );
 
         // validate them
-        if(!plainMessage || !receicver) {
+        if(!receicver) {
             return res.status(400).json({
-                message: 'No message, reciever sent'
+                message: 'No reciever sent'
+            });
+        }
+        if(!plainMessage || typeof plainMessage !== 'string' || !plainMessage.trim()) {
+            return res.status(400).json({
+                message: 'Invalid message'
             });
         }
 
@@ -59,10 +65,19 @@ export const MessageController = {
 
     GetMessages: async (req, res) => {
         // get query params for pagination
-        const { limit = 10, cursor } = req.query;
+        // const { limit = 10, cursor } = req.query;
+        const limit = Math.min(30, parseInt(req.query.limit) || 10);
+        const cursor = req.query.cursor;
+        if(cursor && !mongoose.Types.ObjectId.isValid(cursor)) {
+            return res.status(400).json({
+                message: 'Invalid cursor'
+            })
+        }
 
         // get conversation
         const conversation = req.conversation;
+        const userId = req.id;
+        const selectedUser = conversation.participants.find(id => id.toString() !== userId);
 
         try {
             const dbQuery = { conversationId: conversation._id };
@@ -70,9 +85,23 @@ export const MessageController = {
 
             const messages = await Message.find(dbQuery).select('-conversationId')
             .limit(Number(limit))
-            .sort({ _id: 1 });
+            .sort({ _id: -1 });
 
-            if(messages.length === 0) return res.status(200).json({ message: 'No messages yet' })
+            if(messages.length === 0) return res.status(200).json({ message: 'No messages yet' });
+
+            const unseenMessageIds = messages.filter(
+                (message) => 
+                    message.sender.toString() === selectedUser.toString() && 
+                    !message.seen
+            )
+            .map(messages => messages._id);
+            
+            if(unseenMessageIds.length !== 0) {
+                await Message.updateMany(
+                    { _id: { $in: unseenMessageIds } }, 
+                    { $set: { seen: true } }
+                );
+            }
 
             const sendable = messages.map(
                 (chat) => {
@@ -89,7 +118,26 @@ export const MessageController = {
                 }
             );
 
-            return res.status(200).json(sendable)
+            if(unseenMessageIds.length !== 0) {
+                const selectedUserSocketId = userSocketMap[selectedUser];
+                if(selectedUserSocketId) {
+                    io.to(selectedUserSocketId).emit('MessageSeen', {
+                        conversationId: conversation._id,
+                        unseenMessageIds
+                    })
+                }
+            }
+
+            return res.status(200).json({
+                messages: sendable,
+                meta: {
+                    nextCursor: sendable.length === limit ? 
+                        sendable[sendable.length - 1]._id : 
+                        null,
+                    hasMore: sendable.length === limit ,
+                    limit,
+                }
+            })
         } catch (error) {
             return res.status(500).json({ message: error.message })
         }
@@ -100,7 +148,7 @@ export const MessageController = {
         const messageId = req.params.messageId;
         const conversation = req.conversation;
         const userId = req.id;
-        if(!messageId) return res.status(400).json({ message: 'messageId is required' });
+        if(!messageId || !mongoose.Types.ObjectId.isValid(messageId)) return res.status(400).json({ message: 'messageId is required' });
 
         // get the message object by id and unset
         try {
@@ -130,12 +178,14 @@ export const MessageController = {
     EditMessage: async (req, res) => {
         // get message from body
         const editedPlainMessage = req.body.message;
-        if(!editedPlainMessage) return res.status(400).json({
-            message: 'Edited text is required'
-        })
+         if(!editedPlainMessage || typeof editedPlainMessage !== 'string' || !editedPlainMessage.trim()) {
+            return res.status(400).json({
+                message: 'Invalid message'
+            });
+        }
         // get message id form param
         const messageId = req.params.messageId;
-        if(!messageId) return res.status(400).json({
+        if(!messageId || !mongoose.Types.ObjectId.isValid(messageId)) return res.status(400).json({
             message: 'message ID is required'
         })
         // get conversation form req
