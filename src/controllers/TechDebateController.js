@@ -95,7 +95,11 @@ export const TechDebateController = {
             }
             debate.isLive=false
             await debate.save()
-            return res.status(200).json({"message":"success","Winner team":winner.name})
+            return res.status(200).json({
+                success: true,
+                message: "success",
+                "Winner team": winner.clubName
+            })
     }catch(err){
         return res.status(500).json({"error":err.message})
     }
