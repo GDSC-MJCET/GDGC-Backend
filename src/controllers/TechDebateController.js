@@ -83,7 +83,7 @@ export const TechDebateController = {
             let winner;
             // console.log("hello" , debate , right , left)
             if (debate.rightScore == debate.leftScore) {
-                res.staus(408).json({
+                return res.status(408).json({
                     "message" : "you cannot end the debate unless one has more points" , 
                 })
             } else if (debate.rightScore > debate.leftScore) {
@@ -95,7 +95,11 @@ export const TechDebateController = {
             }
             debate.isLive=false
             await debate.save()
-            return res.status(200).json({"message":"success","Winner team":winner.name})
+            return res.status(200).json({
+                success: true,
+                message: "success",
+                "Winner team": winner.clubName
+            })
     }catch(err){
         return res.status(500).json({"error":err.message})
     }

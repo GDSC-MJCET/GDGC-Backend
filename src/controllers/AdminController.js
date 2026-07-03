@@ -51,7 +51,7 @@ const AdminController={
                 return res.json({success:false,message:"User not found",adminCreated:false})
             }
             const admin = await User.findByIdAndUpdate(id,{admin:true},{new:true})
-            return res.json({success:true,adminCreated:true,user:admin.acknowledged})
+            return res.json({success:true,adminCreated:true,user:admin})
         } catch (error) {
             return res.json({success:false,error:error.message,adminCreated:false})
         }   
@@ -84,7 +84,7 @@ const AdminController={
                 return res.json({success:false,message:"User not found",adminRemoved:false})
             }
             const admin = await User.findByIdAndUpdate(id,{admin:false},{new:true})
-            return res.json({success:true,adminRemoved:true,user:admin.acknowledged})
+            return res.json({success:true,adminRemoved:true,user:admin})
         } catch (error) {
             return res.json({success:false,error:error.message,adminRemoved:false})
         }
@@ -102,7 +102,7 @@ const AdminController={
                 return res.json({success:false,message:"User not found",superAdminRemoved:false})
             }
             const superAdmin = await User.findByIdAndUpdate(id,{admin:false,superadmin:false},{new:true})
-            return res.json({success:true,superAdminRemoved:true,user:superAdmin.acknowledgedßß})
+            return res.json({success:true,superAdminRemoved:true,user:superAdmin})
         } catch (error) {
             return res.json({success:false,error:error.message,superAdminRemoved:false})
         }

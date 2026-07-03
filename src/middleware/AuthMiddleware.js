@@ -17,15 +17,15 @@ export const OptionalVerifyToken = async (req, res, next) => {
 
 export const VerifyToken = async (req, res, next) => {
         try {
-            let token;
             console.log("Authorization header is ",req.headers.authorization)
-            token = req.headers.authorization.split(" ")[1];
-            if (!token) {
+            const header = req.headers.authorization;
+            if (!header || !header.split(" ")[1]) {
                 return res.status(401).json({
                     success: false,
                     message: 'No token provided, access denied'
                 });
             }
+            const token = header.split(" ")[1];
             
             // Verify token
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
