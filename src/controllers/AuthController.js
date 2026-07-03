@@ -431,10 +431,9 @@ export const AuthController = {
         try {
             const body = requiredBody.safeParse(req.body);
             if(!body.success){
-                req.status(401).json({
+                return res.status(401).json({
                     success:false,
-                    message:"improper conditions",
-                    error:error.message
+                    message:body.error
                 })
             }
             const password = req.body.password

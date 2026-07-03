@@ -83,7 +83,7 @@ export const TechDebateController = {
             let winner;
             // console.log("hello" , debate , right , left)
             if (debate.rightScore == debate.leftScore) {
-                res.staus(408).json({
+                return res.status(408).json({
                     "message" : "you cannot end the debate unless one has more points" , 
                 })
             } else if (debate.rightScore > debate.leftScore) {

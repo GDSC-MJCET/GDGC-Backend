@@ -197,7 +197,7 @@ export const FriendRequestController = {
                 status: 'pending'
             })
             .populate('sender', 'name admin superadmin')
-            .populate('receiver', 'name admin supreadmin');
+            .populate('receiver', 'name admin superadmin');
             if(friendRequests.length === 0) {
                 return res.status(200).json({ message: 'No friend requests yet' })
             }
@@ -222,7 +222,7 @@ export const FriendRequestController = {
                 status: 'rejected'
             })
             .populate('sender', 'name admin superadmin')
-            .populate('receiver', 'name admin supreadmin');
+            .populate('receiver', 'name admin superadmin');
             if(rejectedFriendRequests.length === 0) {
                 return res.status(200).json({ message: 'No rejections yet' })
             }

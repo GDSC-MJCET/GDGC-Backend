@@ -28,7 +28,7 @@ export const doubtController = {
             return res.status(200).json({doubts})
         }
        } catch (error) {
-        return resres.status(400).json({"error":error.message})
+        return res.status(400).json({"error":error.message})
        }
        return res.status(500).json({"status":"server Error"})
     }
